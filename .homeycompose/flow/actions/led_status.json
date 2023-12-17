@@ -1,0 +1,16 @@
+{
+    "title": { "en": "Set LED status ..." },
+    "titleFormatted": { "en": "Set LED status [[state]]" },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=tp-link-router"
+      },
+      {
+        "type": "checkbox",
+        "name": "state",
+        "title": { "en": "enabled" }
+      }
+    ]
+  }

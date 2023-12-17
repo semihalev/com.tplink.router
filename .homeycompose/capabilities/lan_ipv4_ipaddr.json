@@ -1,0 +1,9 @@
+{
+    "type": "string",
+    "title": {
+      "en": "LAN IP Address"
+    },
+    "getable": true,
+    "setable": false,
+    "icon": "./assets/capabilities/lan_ip_address.svg"
+}

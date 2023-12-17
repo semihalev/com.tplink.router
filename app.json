@@ -1,0 +1,368 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.tplink.router",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "brandColor": "#4acbd6",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "TP-Link Router"
+  },
+  "description": {
+    "en": "Get useful information from TP-Link routers."
+  },
+  "category": [
+    "internet"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.jpg",
+    "large": "/assets/images/large.jpg",
+    "xlarge": "/assets/images/xlarge.jpg"
+  },
+  "author": {
+    "name": "Yasar Semih Alev",
+    "email": "semihalev@gmail.com"
+  },
+  "support": "https://github.com/semihalev/com.tplink.router",
+  "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "A client became..."
+        },
+        "titleFormatted": {
+          "en": "[[client]] became [[status]]"
+        },
+        "tokens": [
+          {
+            "type": "string",
+            "name": "name",
+            "title": {
+              "en": "name"
+            },
+            "example": {
+              "en": "Johns-Computer"
+            }
+          },
+          {
+            "type": "string",
+            "name": "ipaddr",
+            "title": {
+              "en": "ip address"
+            },
+            "example": {
+              "en": "192.168.0.2"
+            }
+          },
+          {
+            "type": "string",
+            "name": "mac",
+            "title": {
+              "en": "mac address"
+            },
+            "example": {
+              "en": "A1:B2:C3:D4:E5:F6"
+            }
+          }
+        ],
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tp-link-router"
+          },
+          {
+            "name": "client",
+            "type": "autocomplete",
+            "placeholder": {
+              "en": "client"
+            }
+          },
+          {
+            "name": "status",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "online",
+                "title": {
+                  "en": "online"
+                }
+              },
+              {
+                "id": "offline",
+                "title": {
+                  "en": "offline"
+                }
+              }
+            ]
+          }
+        ],
+        "id": "client_state_changed"
+      },
+      {
+        "title": {
+          "en": "WAN status changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tp-link-router"
+          }
+        ],
+        "tokens": [
+          {
+            "type": "boolean",
+            "name": "status",
+            "title": {
+              "en": "status"
+            }
+          }
+        ],
+        "id": "wan_state_changed"
+      }
+    ],
+    "conditions": [
+      {
+        "title": {
+          "en": "client is online"
+        },
+        "titleFormatted": {
+          "en": "[[client]] is online"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=tp-link-router"
+          },
+          {
+            "type": "autocomplete",
+            "name": "client",
+            "placeholder": {
+              "en": "client"
+            }
+          }
+        ],
+        "id": "client_is_online"
+      }
+    ],
+    "actions": [
+      {
+        "title": {
+          "en": "Set LED status ..."
+        },
+        "titleFormatted": {
+          "en": "Set LED status [[state]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=tp-link-router"
+          },
+          {
+            "type": "checkbox",
+            "name": "state",
+            "title": {
+              "en": "enabled"
+            }
+          }
+        ],
+        "id": "led_status"
+      },
+      {
+        "title": {
+          "en": "Reboot"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=tp-link-router"
+          }
+        ],
+        "id": "reboot"
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "TP-Link Router"
+      },
+      "class": "other",
+      "capabilities": [],
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "lan"
+      ],
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "title": {
+              "en": "Login with your router credentials"
+            },
+            "usernameLabel": {
+              "en": "IP Address"
+            },
+            "usernamePlaceholder": {
+              "en": "192.168.0.1"
+            },
+            "passwordLabel": {
+              "en": "Password"
+            },
+            "passwordPlaceholder": {
+              "en": "Password"
+            }
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "energy": {
+        "approximation": {
+          "usageConstant": 5
+        }
+      },
+      "images": {
+        "small": "/drivers/tp-link-router/assets/images/small.png",
+        "large": "/drivers/tp-link-router/assets/images/large.png",
+        "xlarge": "/drivers/tp-link-router/assets/images/xlarge.png"
+      },
+      "id": "tp-link-router"
+    }
+  ],
+  "capabilities": {
+    "alarm_wan": {
+      "type": "boolean",
+      "uiComponent": "sensor",
+      "uiQuickAction": false,
+      "title": {
+        "en": "WAN Disconnected"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "insightsTitleTrue": {
+        "en": "WAN disconnected"
+      },
+      "insightsTitleFalse": {
+        "en": "WAN connected"
+      },
+      "icon": "./assets/capabilities/alarm_wan.svg"
+    },
+    "connected_clients": {
+      "type": "number",
+      "title": {
+        "en": "Connected Clients"
+      },
+      "getable": true,
+      "setable": false,
+      "insights": true,
+      "icon": "./assets/capabilities/connected_clients.svg"
+    },
+    "cpu_usage": {
+      "type": "number",
+      "title": {
+        "en": "CPU Usage"
+      },
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "%"
+      },
+      "decimals": 0,
+      "insights": true,
+      "icon": "./assets/capabilities/cpu_usage.svg"
+    },
+    "lan_ipv4_ipaddr": {
+      "type": "string",
+      "title": {
+        "en": "LAN IP Address"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "./assets/capabilities/lan_ip_address.svg"
+    },
+    "led_onoff": {
+      "type": "boolean",
+      "title": {
+        "en": "LED Status"
+      },
+      "uiQuickAction": false,
+      "uiComponent": "button",
+      "getable": true,
+      "setable": true,
+      "insights": false,
+      "icon": "./assets/capabilities/led_onoff.svg"
+    },
+    "mem_usage": {
+      "type": "number",
+      "title": {
+        "en": "Memory Usage"
+      },
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "%"
+      },
+      "decimals": 0,
+      "insights": true,
+      "icon": "./assets/capabilities/mem_usage.svg"
+    },
+    "reboot": {
+      "type": "boolean",
+      "title": {
+        "en": "Reboot"
+      },
+      "insightsTitleTrue": {
+        "en": "Router restarted"
+      },
+      "insightsTitleFalse": {
+        "en": "Router UP"
+      },
+      "uiQuickAction": false,
+      "uiComponent": "button",
+      "getable": true,
+      "setable": true,
+      "insights": true,
+      "icon": "./assets/capabilities/reboot.svg"
+    },
+    "wan_ipv4_ipaddr": {
+      "type": "string",
+      "title": {
+        "en": "WAN IP Address"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "./assets/capabilities/wan_ip_address.svg"
+    },
+    "wan_ipv4_uptime": {
+      "type": "string",
+      "title": {
+        "en": "Online Duration"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "./assets/capabilities/uptime.svg"
+    }
+  }
+}

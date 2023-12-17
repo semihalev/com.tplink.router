@@ -1,0 +1,9 @@
+{
+    "type": "string",
+    "title": {
+      "en": "WAN IP Address"
+    },
+    "getable": true,
+    "setable": false,
+    "icon": "./assets/capabilities/wan_ip_address.svg"
+}

@@ -1,0 +1,21 @@
+{
+    "title": {
+      "en": "WAN status changed"
+    },
+    "args": [
+      {
+        "name": "device",
+        "type": "device",
+        "filter": "driver_id=tp-link-router"
+      }
+    ],
+    "tokens": [
+      {
+        "type": "boolean",
+        "name": "status",
+        "title": {
+          "en": "status"
+        }
+      }
+    ]
+  }

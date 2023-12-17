@@ -1,0 +1,12 @@
+{
+    "type": "boolean",
+    "title": {
+      "en": "LED Status"
+    },
+    "uiQuickAction": false,
+    "uiComponent": "button",
+    "getable": true,
+    "setable": true,
+    "insights": false,
+    "icon": "./assets/capabilities/led_onoff.svg"
+}

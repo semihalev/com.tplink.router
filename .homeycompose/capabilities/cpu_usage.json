@@ -1,0 +1,14 @@
+{
+    "type": "number",
+    "title": {
+      "en": "CPU Usage"
+    },
+    "getable": true,
+    "setable": false,
+    "units": {
+      "en": "%"
+    },
+    "decimals": 0,
+    "insights": true,
+    "icon": "./assets/capabilities/cpu_usage.svg"
+}

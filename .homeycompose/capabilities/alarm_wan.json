@@ -1,0 +1,18 @@
+{
+    "type": "boolean",
+    "uiComponent": "sensor",
+    "uiQuickAction": false,
+    "title": {
+        "en": "WAN Disconnected"
+    },
+    "getable": true,
+    "setable": false,
+    "insights": true,
+    "insightsTitleTrue": {
+        "en": "WAN disconnected"
+    },
+    "insightsTitleFalse": {
+        "en": "WAN connected"
+    },
+    "icon": "./assets/capabilities/alarm_wan.svg"
+}

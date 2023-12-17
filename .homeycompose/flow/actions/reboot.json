@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Reboot"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=tp-link-router"
+    }
+  ]
+}

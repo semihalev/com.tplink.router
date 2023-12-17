@@ -1,0 +1,14 @@
+{
+    "type": "number",
+    "title": {
+      "en": "Memory Usage"
+    },
+    "getable": true,
+    "setable": false,
+    "units": {
+      "en": "%"
+    },
+    "decimals": 0,
+    "insights": true,
+    "icon": "./assets/capabilities/mem_usage.svg"
+}

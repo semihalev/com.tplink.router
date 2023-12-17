@@ -1,0 +1,72 @@
+{
+  "title": {
+    "en": "A client became..."
+  },
+  "titleFormatted": {
+    "en": "[[client]] became [[status]]"
+  },
+  "tokens": [
+    {
+      "type": "string",
+      "name": "name",
+      "title": {
+        "en": "name"
+      },
+      "example": {
+        "en": "Johns-Computer"
+      }
+    },
+    {
+      "type": "string",
+      "name": "ipaddr",
+      "title": {
+        "en": "ip address"
+      },
+      "example": {
+        "en": "192.168.0.2"
+      }
+    },
+    {
+      "type": "string",
+      "name": "mac",
+      "title": {
+        "en": "mac address"
+      },
+      "example": {
+        "en": "A1:B2:C3:D4:E5:F6"
+      }
+    }
+  ],
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=tp-link-router"
+    },
+    {
+      "name": "client",
+      "type": "autocomplete",
+      "placeholder": {
+        "en": "client"
+      }
+    },
+    {
+      "name": "status",
+      "type": "dropdown",
+      "values": [
+        {
+          "id": "online",
+          "title": {
+            "en": "online"
+          }
+        },
+        {
+          "id": "offline",
+          "title": {
+            "en": "offline"
+          }
+        }
+      ]
+    }
+  ]
+}

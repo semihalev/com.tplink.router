@@ -1,0 +1,9 @@
+{
+    "type": "string",
+    "title": {
+      "en": "Online Duration"
+    },
+    "getable": true,
+    "setable": false,
+    "icon": "./assets/capabilities/uptime.svg"
+  }

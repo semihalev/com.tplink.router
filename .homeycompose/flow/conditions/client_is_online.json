@@ -1,0 +1,22 @@
+{
+  "title": {
+    "en": "client is online"
+  },
+  "titleFormatted": {
+    "en": "[[client]] is online"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=tp-link-router"
+    },
+    {
+      "type": "autocomplete",
+      "name": "client",
+      "placeholder": {
+        "en": "client"
+      }
+    }
+  ]
+}

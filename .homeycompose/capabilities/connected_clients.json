@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+      "en": "Connected Clients"
+    },
+    "getable": true,
+    "setable": false,
+    "insights": true,
+    "icon": "./assets/capabilities/connected_clients.svg"
+  }
