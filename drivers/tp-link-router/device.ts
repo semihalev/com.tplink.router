@@ -92,7 +92,10 @@ class RouterDevice extends Homey.Device {
           value = this.status[capability] * 100;
         }
         if (capability === 'connected_clients') {
-          value = this.status['access_devices_wired'].length + this.status['access_devices_wireless_host'].length;
+          value = this.status.access_devices_wireless_host.length;
+          if (this.status.access_devices_wired) {
+            value += this.status.access_devices_wired.length;
+          }
         }
         if (capability === 'alarm_wan') {
           value = this.wanStatus !== 'connected' && this.wanStatus !== '';

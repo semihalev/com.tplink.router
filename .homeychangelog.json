@@ -4,5 +4,8 @@
   },
   "1.0.1": {
     "en": "Bug fixes."
+  },
+  "1.0.2": {
+    "en": "Check the wired clients while counting."
   }
 }
