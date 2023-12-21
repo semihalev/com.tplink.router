@@ -7,5 +7,8 @@
   },
   "1.0.2": {
     "en": "Check the wired clients while counting."
+  },
+  "1.0.3": {
+    "en": "Corrected readme for Homey standards."
   }
 }

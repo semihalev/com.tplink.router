@@ -1,5 +1,3 @@
-Get useful information from TP-Link routers.
-
 Control your home network about connected clients, detect presence, wan connection status and much more.
 
 Supported routers:
