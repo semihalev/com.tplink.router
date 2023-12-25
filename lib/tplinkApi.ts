@@ -6,7 +6,6 @@
 //
 
 import * as crypto from 'crypto';
-import forge from 'node-forge';
 import fetch from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 
@@ -19,7 +18,8 @@ export default class TPLink {
   };
 
   private token: string = ''; // stok token from router
-  private rsaKeyPw: string[] = []; // (n, e) RSA public key from router for encrypting the password
+  private rsaPublicKeyPw!: crypto.KeyObject; // (n, e) RSA public key from router for encrypting the password
+  private rsaPublicKeyAuth!: crypto.KeyObject;
   private rsaKeyAuth: string[] = []; // (n, e, seq) RSA public key from router for encrypting signature
   private md5HashPw: string = ''; // md5 of username and password, used to sign data, not login
   private aesKey: string[] = []; // random AES key for encrypting the body of the request and decrypting the response
@@ -70,7 +70,7 @@ export default class TPLink {
     // hash the username and password. The username is always admin
     this.md5HashPw = this.hashPw('admin', this.password);
     // get the public rsa key for encrypting the password
-    this.rsaKeyPw = await this.getRSAPublicKeyPassword();
+    this.rsaPublicKeyPw = await this.getRSAPublicKeyPassword();
     // get the public rsa key for encrypting the auth token / signature
     this.rsaKeyAuth = await this.getRSAPublicKeyAuth();
     // generate random AES key
@@ -358,14 +358,11 @@ export default class TPLink {
       if (this.aesKey === undefined) {
         this.error('AES key not found');
       }
-      const aesEncryptor = forge.cipher.createCipher('AES-CBC', this.aesKey[0]);
-      aesEncryptor.start({ iv: this.aesKey[1] });
-      aesEncryptor.update(forge.util.createBuffer(dataStr, 'utf8'));
-      aesEncryptor.finish();
-      // encrypt the body
-      const encryptedData = aesEncryptor.output;
-      // encode encrypted binary data to base64
-      const encryptedDataStr = forge.util.encode64(encryptedData.getBytes());
+
+      const cipher = crypto.createCipheriv('AES-128-CBC', this.aesKey[0], this.aesKey[1]);
+      let encryptedDataStr = cipher.update(dataStr, 'utf8', 'base64');
+      encryptedDataStr += cipher.final('base64');
+
       // get encrypted signature
       const signature = this.getSignature(encryptedDataStr.length, isLogin);
       // signature needs to go first in the form
@@ -433,14 +430,10 @@ export default class TPLink {
       }
     }
     if (encrypt) { // decrypt the response
-      // decode base64 string from response
-      const encryptedResponseData = forge.util.decode64(responseData.data);
-      // decrypt the response using our AES key
-      const aesDecryptor = forge.cipher.createDecipher('AES-CBC', this.aesKey[0]);
-      aesDecryptor.start({ iv: this.aesKey[1] });
-      aesDecryptor.update(forge.util.createBuffer(encryptedResponseData));
-      aesDecryptor.finish();
-      const responseStr = aesDecryptor.output.toString();
+      const decipher = crypto.createDecipheriv('AES-128-CBC', this.aesKey[0], this.aesKey[1]);
+      let responseStr = decipher.update(responseData.data, 'base64', 'utf8');
+      responseStr += decipher.final('utf8');
+
       try { // try to parse the response as json
         return JSON.parse(responseStr);
       } catch (error) { // if it fails, return the response as an object with data
@@ -463,14 +456,23 @@ export default class TPLink {
 
   // get the public rsa key from the router
   // return value: (n, e) RSA public key for encrypting the password as array of two strings
-  private async getRSAPublicKeyPassword(): Promise<string[]> {
+  private async getRSAPublicKeyPassword(): Promise<crypto.KeyObject> {
     const url = this.getURL('login', 'keys');
     const data = {
       operation: 'read',
     };
     const response = await this.request(url, data);
     if (response.success === true) {
-      return response.data.password;
+      const publicKey = crypto.createPublicKey({
+        key: {
+          n: Buffer.from(response.data.password[0], 'hex').toString('base64'),
+          e: Buffer.from(response.data.password[1], 'hex').toString('base64'),
+          kty: 'RSA',
+        },
+        format: 'jwk',
+      });
+
+      return publicKey;
     }
     throw new Error(`Error getting RSA public key for password from TPLink: ${JSON.stringify(response)}`);
   }
@@ -486,6 +488,16 @@ export default class TPLink {
     if (response.success === true) {
       const authPublicKey = response.data.key;
       authPublicKey.push(response.data.seq.toString());
+
+      this.rsaPublicKeyAuth = crypto.createPublicKey({
+        key: {
+          n: Buffer.from(authPublicKey[0], 'hex').toString('base64'),
+          e: Buffer.from(authPublicKey[1], 'hex').toString('base64'),
+          kty: 'RSA',
+        },
+        format: 'jwk',
+      });
+
       // this.log.debug('Successfully got RSA public key for signature from TPLink', authPublicKey);
       return authPublicKey;
     }
@@ -496,23 +508,18 @@ export default class TPLink {
   private generateAESKey(): string[] {
     const keyLen = 16 / 2;
     const IVLen = 16 / 2;
-    const key = forge.util.bytesToHex(forge.random.getBytesSync(keyLen));
-    const iv = forge.util.bytesToHex(forge.random.getBytesSync(IVLen));
-    return [key, iv];
+    const key = crypto.randomBytes(keyLen);
+    const iv = crypto.randomBytes(IVLen);
+    return [key.toString('hex'), iv.toString('hex')];
   }
 
   // encrypt the password using RSA public key
   private encryptPassword(password: string): string {
-    const { BigInteger } = forge.jsbn;
-    const modulus = new BigInteger(this.rsaKeyPw[0], 16);
-    const exponent = new BigInteger(this.rsaKeyPw[1], 16);
-    const publicKey = forge.pki.rsa.setPublicKey(modulus, exponent);
-    // const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
-    // this.log('Successfully created Password public key\n', publicKeyPem);
-    // encrypt password with public key
-    const encrypted = publicKey.encrypt(forge.util.encodeUtf8(password));
-    const encryptedHex = forge.util.bytesToHex(encrypted);
-    return encryptedHex;
+    const encryptedData = crypto.publicEncrypt({
+      key: this.rsaPublicKeyPw,
+      padding: crypto.constants.RSA_PKCS1_PADDING,
+    }, Buffer.from(password));
+    return encryptedData.toString('hex');
   }
 
   // Generate encrypted signature for the request
@@ -530,20 +537,16 @@ export default class TPLink {
     } else { // not login
       signData = `h=${this.md5HashPw}&s=${parseInt(this.rsaKeyAuth[2], 10) + bodyDataLength}`;
     }
-    // encrypt signData with Auth RSA public key
-    const { BigInteger } = forge.jsbn;
-    const modulus = new BigInteger(this.rsaKeyAuth[0], 16);
-    const exponent = new BigInteger(this.rsaKeyAuth[1], 16);
-    const publicKey = forge.pki.rsa.setPublicKey(modulus, exponent);
-    // const publicKeyPem = forge.pki.publicKeyToPem(publicKey);
-    // this.log('Successfully created auth public key\n', publicKeyPem);
-    // encrypt signature data chunked into 53 byte chunks
+
     let signature = '';
     const chunkSize = 53;
     let position = 0;
     while (position < signData.length) {
       const chunk = signData.slice(position, position + chunkSize);
-      signature += forge.util.bytesToHex(publicKey.encrypt(forge.util.encodeUtf8(chunk)));
+      signature += crypto.publicEncrypt({
+        key: this.rsaPublicKeyAuth,
+        padding: crypto.constants.RSA_PKCS1_PADDING,
+      }, Buffer.from(chunk)).toString('hex');
       position += chunkSize;
     }
     return signature;

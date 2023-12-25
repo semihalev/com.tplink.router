@@ -10,5 +10,8 @@
   },
   "1.0.3": {
     "en": "Corrected readme for Homey standards."
+  },
+  "1.0.4": {
+    "en": "Deleted nodejs forge module and used standart nosejs crypto for better memory usage."
   }
 }
