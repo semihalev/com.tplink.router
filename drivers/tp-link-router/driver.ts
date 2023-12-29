@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import Homey from 'homey';
 import TPLink from '../../lib/tplinkApi';
 import CryptoUtil from '../../lib/cryptoUtil';
@@ -9,13 +7,13 @@ class RouterDriver extends Homey.Driver {
   async onPair(session) {
     const router: TPLink = new TPLink(this);
 
-    let ip_address = '';
+    let ipAddress = '';
     let password = '';
 
     session.setHandler('login', async (data) => {
       const connected = await router.connect(data.username, data.password);
       if (connected) {
-        ip_address = data.username;
+        ipAddress = data.username;
         password = data.password;
       }
 
@@ -35,7 +33,7 @@ class RouterDriver extends Homey.Driver {
           id: status.lan_macaddr,
         },
         settings: {
-          ip_address,
+          ip_address: ipAddress,
           password: CryptoUtil.encrypt(password, Homey.env.AES_SECRET),
         },
       }];

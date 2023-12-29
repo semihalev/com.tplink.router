@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 //
 // TP-Link API by Jason Grimard 2023
 // Tested and working with Archer AX6000
@@ -6,10 +5,9 @@
 //
 
 import * as crypto from 'crypto';
-import fetch from 'node-fetch';
-import { AbortSignal } from 'node-fetch/externals';
 
 export default class TPLink {
+
   private HEADERS = { // default headers for all requests
     Accept: 'application/json, text/javascript, */*; q=0.01',
     'User-Agent': 'Homebridge TP-Link Access Control',
@@ -386,10 +384,7 @@ export default class TPLink {
       }
       tempHeaders['Cookie'] = cookieStr;
     }
-    // setup abortcontroller to limit fetch requests to 5 seconds
-    const timeoutTime = 5000;
-    const abortController = new AbortController();
-    const timeoutId = this.homey.setTimeout(() => abortController.abort(), timeoutTime);
+
     // send request
     let responseText = '';
     let response: any;
@@ -398,10 +393,8 @@ export default class TPLink {
         method: 'post',
         body: bodyParams,
         headers: this.HEADERS,
-        signal: abortController.signal as AbortSignal,
       });
       responseText = await response.text(); // need text first incase response is not JSON, since we can only use once.
-      clearTimeout(timeoutId); // clear timeout after receiving response
     } catch (error: any) {
       if (error.name === 'AbortError') {
         throw new Error('Request timed out, verify IP address of router.');
@@ -411,6 +404,7 @@ export default class TPLink {
         throw error;
       }
     }
+
     let responseData;
     try { // try to parse json
       responseData = JSON.parse(responseText);
@@ -418,12 +412,13 @@ export default class TPLink {
       this.log('The response is not json, we will create an object with the responseText in data:');
       responseData = { data: responseText };
     }
-    const responseCookies = response.headers.raw()['set-cookie'];
-    // this.log('Received response from TPLink', responseData);
+    const responseCookies = response.headers.get('set-cookie');
+    // this.log('Received response headers from TPLink', response.headers);
     // parse cookies
-    if (responseCookies !== undefined) {
+    if (responseCookies !== null) {
       // this.log('Received cookies from TPLink', responseCookies);
-      for (const cookie of responseCookies) {
+      const cookies = responseCookies.split(', ');
+      for (const cookie of cookies) {
         const cookieName = cookie.split('=')[0];
         const cookieValue = cookie.split('=')[1].split(';')[0]; // remove anything after the first ';'
         this.cookies.set(cookieName, cookieValue);
@@ -431,8 +426,14 @@ export default class TPLink {
     }
     if (encrypt) { // decrypt the response
       const decipher = crypto.createDecipheriv('AES-128-CBC', this.aesKey[0], this.aesKey[1]);
-      let responseStr = decipher.update(responseData.data, 'base64', 'utf8');
-      responseStr += decipher.final('utf8');
+
+      let responseStr = '';
+      try {
+        responseStr += decipher.update(responseData.data, 'base64', 'utf8');
+        responseStr += decipher.final('utf8');
+      } catch (error) {
+        return { data: { error: 'Decryption failed, forced logout.' } };
+      }
 
       try { // try to parse the response as json
         return JSON.parse(responseStr);

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// import Homey from 'homey';
 import Homey from 'homey';
 import TPLink from '../../lib/tplinkApi';
 import CryptoUtil from '../../lib/cryptoUtil';
@@ -25,12 +22,13 @@ class RouterDevice extends Homey.Device {
   router: TPLink = new TPLink(this);
   connected: boolean = false;
   status: any = null;
-  statusInterval: any = null;
+  statusInterval!: NodeJS.Timeout;
+  loginInterval!: NodeJS.Timeout;
   loggingIn: boolean = false;
   clients: any[] = [];
   wanStatus: string = '';
 
-  ip_address: string = '';
+  ipAddress: string = '';
   password: string = '';
 
   clientStateFlow!: Homey.FlowCardTriggerDevice;
@@ -39,10 +37,10 @@ class RouterDevice extends Homey.Device {
   async onInit() {
     const settings = this.getSettings();
 
-    this.ip_address = settings.ip_address;
+    this.ipAddress = settings.ip_address;
     this.password = CryptoUtil.decrypt(settings.password, Homey.env.AES_SECRET);
 
-    this.connected = await this.router.connect(this.ip_address, this.password).catch((e) => {
+    this.connected = await this.router.connect(this.ipAddress, this.password).catch((e) => {
       this.error(e);
       return false;
     });
@@ -150,7 +148,7 @@ class RouterDevice extends Homey.Device {
 
     for (const client of this.clients) {
       if (lastClients.length > 0) {
-        if (!lastClients.find(obj => {
+        if (!lastClients.find((obj) => {
           return obj.mac === client.mac;
         })) {
           const tokens = {
@@ -158,14 +156,14 @@ class RouterDevice extends Homey.Device {
             ipaddr: client.ipaddr,
             mac: client.mac,
           };
-          await this.clientStateFlow.trigger(this, tokens, {status: 'online', client: tokens});
+          await this.clientStateFlow.trigger(this, tokens, { status: 'online', client: tokens });
         }
       }
     }
 
     if (lastClients.length > 0) {
       for (const client of lastClients) {
-        if (!this.clients.find(obj => {
+        if (!this.clients.find((obj) => {
           return obj.mac === client.mac;
         })) {
           const tokens = {
@@ -173,7 +171,7 @@ class RouterDevice extends Homey.Device {
             ipaddr: client.ipaddr,
             mac: client.mac,
           };
-          await this.clientStateFlow.trigger(this, tokens, {status: 'offline', client: tokens});
+          await this.clientStateFlow.trigger(this, tokens, { status: 'offline', client: tokens });
         }
       }
     }
@@ -188,7 +186,7 @@ class RouterDevice extends Homey.Device {
       }
 
       if (this.wanStatus !== status.wan_internet_status) {
-        await this.wanStateFlow.trigger(this, {status: status.wan_internet_status === 'connected'}, {});
+        await this.wanStateFlow.trigger(this, { status: status.wan_internet_status === 'connected' }, {});
       }
 
       this.wanStatus = status.wan_internet_status;
@@ -215,7 +213,7 @@ class RouterDevice extends Homey.Device {
     const clientIsConnected = this.homey.flow.getConditionCard('client_is_online');
     clientIsConnected.registerRunListener(async (args) => {
       await this.updateClients();
-      if (this.clients.find(client => client.mac === args.client.mac)) {
+      if (this.clients.find((client) => client.mac === args.client.mac)) {
         return true;
       }
       return false;
@@ -225,13 +223,13 @@ class RouterDevice extends Homey.Device {
       const filteredClients = this.clients.filter((client) => {
         const search = query.toLowerCase();
 
-        return client.mac.toLowerCase().includes(search) ||
-        client.name.toLowerCase().includes(search) ||
-        client.ipaddr.toLowerCase().includes(search);
+        return client.mac.toLowerCase().includes(search)
+        || client.name.toLowerCase().includes(search)
+        || client.ipaddr.toLowerCase().includes(search);
       });
 
       const results = [
-        ...filteredClients.map(client => ({name: client.name, mac: client.mac, description: client.mac})),
+        ...filteredClients.map((client) => ({ name: client.name, mac: client.mac, description: client.mac })),
       ];
 
       return results;
@@ -250,13 +248,13 @@ class RouterDevice extends Homey.Device {
       const filteredClients = this.clients.filter((client) => {
         const search = query.toLowerCase();
 
-        return client.mac.toLowerCase().includes(search) ||
-        client.name.toLowerCase().includes(search) ||
-        client.ipaddr.toLowerCase().includes(search);
+        return client.mac.toLowerCase().includes(search)
+        || client.name.toLowerCase().includes(search)
+        || client.ipaddr.toLowerCase().includes(search);
       });
 
       const results = [
-        ...filteredClients.map(client => ({name: client.name, mac: client.mac, description: client.mac})),
+        ...filteredClients.map((client) => ({ name: client.name, mac: client.mac, description: client.mac })),
       ];
 
       return results;
@@ -289,8 +287,8 @@ class RouterDevice extends Homey.Device {
     this.loggingIn = true;
     await this.setWarning('Trying connect to the router...');
 
-    this.homey.setTimeout(async () => {
-      this.connected = await this.router.connect(this.ip_address, this.password).catch((e) => {
+    this.loginInterval = this.homey.setTimeout(async () => {
+      this.connected = await this.router.connect(this.ipAddress, this.password).catch((e) => {
         this.error(e.message);
         return false;
       });
@@ -310,6 +308,7 @@ class RouterDevice extends Homey.Device {
 
   clearIntervals() {
     this.homey.clearInterval(this.statusInterval);
+    this.homey.clearTimeout(this.loginInterval);
   }
 
   onDeleted(): void {
@@ -318,17 +317,18 @@ class RouterDevice extends Homey.Device {
 
   secondsToDuration(seconds: number) {
     seconds = Number(seconds);
-    const d = Math.floor(seconds / (3600*24));
-    const h = Math.floor(seconds % (3600*24) / 3600);
-    const m = Math.floor(seconds % 3600 / 60);
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
     // const s = Math.floor(seconds % 60);
 
-    const dDisplay = d > 0 ? d + 'd' : '';
-    const hDisplay = h > 0 ? ' ' + h + 'h' : '';
-    const mDisplay = m > 0 ? ' ' + m + 'm' : '';
+    const dDisplay = d > 0 ? `${d}d` : '';
+    const hDisplay = h > 0 ? ` ${h}h` : '';
+    const mDisplay = m > 0 ? ` ${m}m` : '';
 
     return dDisplay + hDisplay + mDisplay;
   }
+
 }
 
 module.exports = RouterDevice;

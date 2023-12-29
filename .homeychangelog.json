@@ -12,6 +12,9 @@
     "en": "Corrected readme for Homey standards."
   },
   "1.0.4": {
-    "en": "Deleted nodejs forge module and used standart nosejs crypto for better memory usage."
+    "en": "Deleted nodejs forge module and used standart nodejs crypto for better memory usage."
+  },
+  "1.0.5": {
+    "en": "Fix possible memory leak."
   }
 }
