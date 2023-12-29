@@ -5,6 +5,7 @@
 //
 
 import * as crypto from 'crypto';
+import axios from 'axios';
 
 export default class TPLink {
 
@@ -385,40 +386,29 @@ export default class TPLink {
       tempHeaders['Cookie'] = cookieStr;
     }
 
-    // send request
-    let responseText = '';
-    let response: any;
-    try {
-      response = await fetch(url, {
-        method: 'post',
-        body: bodyParams,
-        headers: this.HEADERS,
-      });
-      responseText = await response.text(); // need text first incase response is not JSON, since we can only use once.
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        throw new Error('Request timed out, verify IP address of router.');
-      } else if (error.code === 'EHOSTUNREACH') {
-        throw new Error(`Verify the IP address of your router. ${error.message}`);
-      } else {
-        throw error;
-      }
-    }
+    const options = {
+      url,
+      method: 'POST',
+      headers: this.HEADERS,
+      timeout: 5000,
+      data: bodyParams,
+    };
 
-    let responseData;
-    try { // try to parse json
-      responseData = JSON.parse(responseText);
-    } catch (error) { // if JSON.parse fails, create a json object with the responseText in data
-      this.log('The response is not json, we will create an object with the responseText in data:');
-      responseData = { data: responseText };
-    }
-    const responseCookies = response.headers.get('set-cookie');
+    const response = await axios.request(options)
+      .then((response) => {
+        return response;
+      }).catch((error) => {
+        this.error(error.message);
+        throw error;
+      });
+
+    const responseData = response.data;
+    const responseCookies = response.headers['set-cookie'];
     // this.log('Received response headers from TPLink', response.headers);
     // parse cookies
-    if (responseCookies !== null) {
+    if (responseCookies !== undefined) {
       // this.log('Received cookies from TPLink', responseCookies);
-      const cookies = responseCookies.split(', ');
-      for (const cookie of cookies) {
+      for (const cookie of responseCookies) {
         const cookieName = cookie.split('=')[0];
         const cookieValue = cookie.split('=')[1].split(';')[0]; // remove anything after the first ';'
         this.cookies.set(cookieName, cookieValue);

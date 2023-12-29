@@ -16,5 +16,8 @@
   },
   "1.0.5": {
     "en": "Fix possible memory leak."
+  },
+  "1.0.6": {
+    "en": "Changed API requests for better memory usage."
   }
 }
