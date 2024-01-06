@@ -19,5 +19,8 @@
   },
   "1.0.6": {
     "en": "Changed API requests for better memory usage."
+  },
+  "1.0.7": {
+    "en": "Bugfix on wireless client count and API optimizations."
   }
 }

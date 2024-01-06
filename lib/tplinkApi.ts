@@ -11,7 +11,7 @@ export default class TPLink {
 
   private HEADERS = { // default headers for all requests
     Accept: 'application/json, text/javascript, */*; q=0.01',
-    'User-Agent': 'Homebridge TP-Link Access Control',
+    'User-Agent': 'Homey TP-Link Access Control',
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     'X-Requested-With': 'XMLHttpRequest',
   };
@@ -361,6 +361,7 @@ export default class TPLink {
       const cipher = crypto.createCipheriv('AES-128-CBC', this.aesKey[0], this.aesKey[1]);
       let encryptedDataStr = cipher.update(dataStr, 'utf8', 'base64');
       encryptedDataStr += cipher.final('base64');
+      cipher.destroy();
 
       // get encrypted signature
       const signature = this.getSignature(encryptedDataStr.length, isLogin);
@@ -390,7 +391,7 @@ export default class TPLink {
       url,
       method: 'POST',
       headers: this.HEADERS,
-      timeout: 5000,
+      // timeout: 5000,
       data: bodyParams,
     };
 
@@ -404,6 +405,7 @@ export default class TPLink {
 
     const responseData = response.data;
     const responseCookies = response.headers['set-cookie'];
+
     // this.log('Received response headers from TPLink', response.headers);
     // parse cookies
     if (responseCookies !== undefined) {
@@ -421,6 +423,7 @@ export default class TPLink {
       try {
         responseStr += decipher.update(responseData.data, 'base64', 'utf8');
         responseStr += decipher.final('utf8');
+        decipher.destroy();
       } catch (error) {
         return { data: { error: 'Decryption failed, forced logout.' } };
       }
@@ -533,11 +536,11 @@ export default class TPLink {
     const chunkSize = 53;
     let position = 0;
     while (position < signData.length) {
-      const chunk = signData.slice(position, position + chunkSize);
+      const chunk = Buffer.from(signData.slice(position, position + chunkSize));
       signature += crypto.publicEncrypt({
         key: this.rsaPublicKeyAuth,
         padding: crypto.constants.RSA_PKCS1_PADDING,
-      }, Buffer.from(chunk)).toString('hex');
+      }, chunk).toString('hex');
       position += chunkSize;
     }
     return signature;

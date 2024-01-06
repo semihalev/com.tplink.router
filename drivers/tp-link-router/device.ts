@@ -90,7 +90,10 @@ class RouterDevice extends Homey.Device {
           value = this.status[capability] * 100;
         }
         if (capability === 'connected_clients') {
-          value = this.status.access_devices_wireless_host.length;
+          value = 0;
+          if (this.status.access_devices_wireless_host) {
+            value += this.status.access_devices_wireless_host.length;
+          }
           if (this.status.access_devices_wired) {
             value += this.status.access_devices_wired.length;
           }
@@ -269,7 +272,7 @@ class RouterDevice extends Homey.Device {
         await this.updateClients();
         await this.updateWanStatus();
       }
-    }, 15 * 1000);
+    }, 30 * 1000);
   }
 
   async startLoginInterval(error: any) {
