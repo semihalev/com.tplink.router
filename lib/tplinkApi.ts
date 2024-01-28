@@ -120,6 +120,24 @@ export default class TPLink {
     throw new Error(`Error getting connected devices: ${JSON.stringify(response)}`);
   }
 
+  public async getSmartNetwork(): Promise<any[]> {
+    const url = this.getURL('admin/smart_network', 'game_accelerator');
+    const data = {
+      operation: 'loadDevice', // or loadSpeed need to be compare
+    };
+    const response = await this.request(url, data, true);
+    if (response.success === true) {
+      this.log(response.data);
+      if (Object.keys(response.data).length > 0) { // test for empty object
+        return response.data;
+      }
+
+      this.log('No connected devices found');
+      return [];
+    }
+    throw new Error(`Error getting smart network: ${JSON.stringify(response)}`);
+  }
+
   // get all information.
   public async getAllStatus(): Promise<any> {
     const url = this.getURL('admin/status', 'all');

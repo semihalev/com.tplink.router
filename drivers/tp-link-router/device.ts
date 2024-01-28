@@ -82,7 +82,10 @@ class RouterDevice extends Homey.Device {
 
     for (const capability of RouterDevice.SensorCapabilities) {
       if (this.hasCapability(capability)) {
-        let value: any = this.status[capability];
+        let value: any = '-';
+        if (this.status[capability]) {
+          value = this.status[capability];
+        }
         if (capability === 'wan_ipv4_uptime') {
           value = this.secondsToDuration(this.status[capability]);
         }
@@ -183,16 +186,21 @@ class RouterDevice extends Homey.Device {
   async updateWanStatus() {
     try {
       const status = await this.router.getInternetStatus();
+      let internetStatus = status.wan_internet_status;
+      if (internetStatus === 'unplugged') {
+        internetStatus = status.internet_status;
+      }
+
       if (this.wanStatus === '') {
-        this.wanStatus = status.wan_internet_status;
+        this.wanStatus = internetStatus;
         return;
       }
 
-      if (this.wanStatus !== status.wan_internet_status) {
-        await this.wanStateFlow.trigger(this, { status: status.wan_internet_status === 'connected' }, {});
+      if (this.wanStatus !== internetStatus) {
+        await this.wanStateFlow.trigger(this, { status: internetStatus === 'connected' }, {});
       }
 
-      this.wanStatus = status.wan_internet_status;
+      this.wanStatus = internetStatus;
     } catch (e) {
       this.error(e);
     }
