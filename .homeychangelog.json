@@ -22,5 +22,8 @@
   },
   "1.0.7": {
     "en": "Bugfix on wireless client count and API optimizations."
+  },
+  "1.0.8": {
+    "en": "Bugfix when router use as an access point."
   }
 }
